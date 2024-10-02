@@ -4,7 +4,7 @@
 
 <h1 align="center">Setting up Active Directory using Azure</h1>
 
-<p>In this tutorial we will set up and configure Active Directory in a virtualized Azure environment. Then create a Domain Controller, join a client machine to the domain, and manage user accounts. Also set up Remote Desktop access for non-administrative users.</p>
+<p>In this tutorial we will set up and configure Active Directory in a virtualized Azure environment. Creating a Domain Controller, joining a client machine to the domain, and managing user accounts. We will also set up Remote Desktop access for non-administrative users.</p>
 
 <h2>Environments and Technologies Used</h2>
 <ul>
@@ -22,6 +22,8 @@
   <li>Select DC-1 VM. Go to Network>Network Settings, select the NIC>ipconfig1 and change the Private IP to static.</li>
   <li>Select Client-1 VM. Go to Network>Network Settings, select the NIC>DNS Servers, select custom and paste in DC-1’s Private IP.</li>
 </ul>
+<br/>
+<img src="https://i.imgur.com/LgzmPmy.png"/>
 
 <h2>Step 2: Testing connection between the VMs</h2>
 <ul>
@@ -30,7 +32,8 @@
   <li>Under Domain Profile set Firewall state to Off. Do the same for ‘Private Profile’ and ‘IPsec’ tabs.</li>
   <li>On Client-1, open Windows Powershell, type “ping” then DC-1’s Private IP. Make sure the connection is successful.</li>
 </ul>
-
+<br/>
+<img src="https://i.imgur.com/GqDDHH7.png"/>
 <h2>Step 3: Install Active Directory</h2>
 <ul>
   <li>On DC-1, go to Server Manager, select add roles and features, check Active Directory
@@ -39,7 +42,8 @@ Domain Services, and install.</li>
   <li>Close the VM and restart it through Azure.</li>
   <li>Log back into DC-1. For username put “mydomain.com\” in front of your username.</li>
 </ul>
-
+<br/>
+<img src="https://i.imgur.com/pplI1sz.png"/>
 <h2>Step 4: Set up Organizational Units (OUs) and Admin User</h2>
 <ul>
   <li>On DC-1, open Active Directory Users and Computers. Click mydomain.com on the left.</li>
@@ -55,7 +59,8 @@ Domain Services, and install.</li>
   <li>On Client- 1, right click start menu> System> rename this PC(advanced)>Change, select domain and enter mydomain.com.</li>
   <li>On DC-1, open Active Directory Users and Computers, select mydomain.com>Computers, drag Client-1 into _CLIENTS folder.</li>
 </ul>
-
+<br/>
+<img src="https://i.imgur.com/3nVxyML.png"/>
 <h2>Step 6: Allowing Non-Administrative Users remote access to Client-1</h2>
 <ul>
   <li>Log onto Client-1 using the admin account, mydomain.com\jack_admin.</li>
