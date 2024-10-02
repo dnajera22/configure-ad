@@ -2,93 +2,63 @@
 <img src="https://i.imgur.com/pU5A58S.png" alt="Microsoft Active Directory Logo"/>
 </p>
 
-<h1 align="center">Azure Active Directory Lab - Deploy and Configure AD</h1>
+<h1 align="center">Setting up Active Directory using Azure</h1>
 
-<p>The goal of this lab is to deploy and configure Active Directory (AD) in a virtualized environment using Azure. We will create a Domain Controller (DC), join a client machine to the domain, and configure user accounts and Remote Desktop access for both administrative and non-administrative users.</p>
-
-<h2>High-Level Deployment and Configuration Steps</h2>
-<ol>
-  <li>Set up resources in Azure: Create a Domain Controller and a Client VM.</li>
-  <li>Ensure network connectivity between the Client and the Domain Controller.</li>
-  <li>Install Active Directory Domain Services (AD DS) on the Domain Controller.</li>
-  <li>Create administrative and standard user accounts in Active Directory.</li>
-  <li>Join the Client machine to the domain.</li>
-  <li>Apply Group Policy to configure Remote Desktop access for non-administrative users in the <strong>_CLIENTS</strong> and <strong>_EMPLOYEES</strong> Organizational Units (OUs).</li>
-  <li>Create additional user accounts using a Powershell ISE script and verify access.</li>
-</ol>
+<p>In this tutorial we will set up and configure Active Directory in a virtualized Azure environment. Then create a Domain Controller, join a client machine to the domain, and manage user accounts. Also set up Remote Desktop access for non-administrative users.</p>
 
 <h2>Environments and Technologies Used</h2>
 <ul>
-  <li>Microsoft Azure (Virtual Machines/Compute)</li>
-  <li>Remote Desktop</li>
+  <li>Microsoft Azure </li>
+  <li>Remote Desktop Connection</li>
+  <li>Windows Powershell</li>
+  <li>Active Directory</li>
   <li>Windows Server 2022 (Domain Controller)</li>
   <li>Windows 10 (Client)</li>
+
+<h2>Step 1: Creating Virtual Machines using Azure</h2>
+<ul>
+  <li>Create a new VM, name it “DC-1”. For image select ‘Windows Server 2022”. Take note of the Resource Group, Location, and Vnet selected.</li>
+  <li>Create another VM, named “Client-1”. For image select “Windows 10”. Use the same Resource Group, Location, and Vnet as DC-1.</li>
+  <li>Select DC-1 VM. Go to Network>Network Settings, select the NIC>ipconfig1 and change the Private IP to static.</li>
+  <li>Select Client-1 VM. Go to Network>Network Settings, select the NIC>DNS Servers, select custom and paste in DC-1’s Private IP.</li>
 </ul>
 
-<h2>Operating Systems Used</h2>
+<h2>Step 2: Testing connection between the VMs</h2>
 <ul>
-  <li>Windows Server 2022</li>
-  <li>Windows 10 (21H2)</li>
-</ul>
-
-<h2>Step 1: Setup Resources in Azure</h2>
-<ul>
-  <li>Create the Domain Controller VM (Windows Server 2022) named “DC-1”.</li>
-  <li>Take note of the Resource Group and Virtual Network (Vnet) created for the Domain Controller.</li>
-  <li>Set DC-1's NIC Private IP address to static to ensure consistent network connectivity.</li>
-  <li>Create the Client VM (Windows 10) named “Client-1” in the same Resource Group and Vnet as DC-1.</li>
-  <li>Ensure both VMs (DC-1 and Client-1) are in the same Vnet. You can verify this with Azure's Network Watcher topology tool.</li>
-</ul>
-
-<h2>Step 2: Ensure Connectivity between Client and Domain Controller</h2>
-<ul>
-  <li>Login to Client-1 using Remote Desktop and run a continuous ping to DC-1’s private IP address (<code>ping -t &lt;ip_address&gt;</code>).</li>
-  <li>Login to DC-1 and enable ICMPv4 (ping) in the local Windows Firewall settings.</li>
-  <li>Check Client-1 to confirm that the ping now succeeds, ensuring connectivity between the Client and Domain Controller.</li>
+  <li>Using Remote Desktop, Log in to both VMs by using the Private IPs found in Azure.</li>
+  <li>On DC-1, hit start>Run, and type ‘wf.msc’. Click Windows Defender Firewall Properties</li>
+  <li>Under Domain Profile set Firewall state to Off. Do the same for ‘Private Profile’ and ‘IPsec’ tabs.</li>
+  <li>On Client-1, open Windows Powershell, type “ping” then DC-1’s Private IP. Make sure the connection is successful.</li>
 </ul>
 
 <h2>Step 3: Install Active Directory</h2>
 <ul>
-  <li>Login to DC-1 and install the <strong>Active Directory Domain Services</strong> (AD DS) role.</li>
-  <li>Promote DC-1 to a Domain Controller and set up a new forest with a domain name (e.g., <code>mydomain.com</code>).</li>
-  <li>Restart DC-1 after promotion and log in using the domain account: <code>mydomain.com\labuser</code>.</li>
+  <li>On DC-1, go to Server Manager, select add roles and features, check Active Directory
+Domain Services, and install.</li>
+  <li>After installation, select ‘promote this server to a domain controller’. Select add a new forest, for this tutorial we will use ‘mydomain.com’. Finish installation.</li>
+  <li>Close the VM and restart it through Azure.</li>
+  <li>Log back into DC-1. For username put “mydomain.com\” in front of your username.</li>
 </ul>
 
-<h2>Step 4: Create Admin User and Organizational Units (OUs) in Active Directory</h2>
+<h2>Step 4: Set up Organizational Units (OUs) and Admin User</h2>
 <ul>
-  <li>In Active Directory Users and Computers (ADUC), create 3 Organizational Units (OU)</li>
-   <li>Create 1st OU named <strong>_EMPLOYEES</strong> for employee users.</li>
-   <li>Create 2nd OU named <strong>_ADMINS</strong> for administrative users.</li>
-   <li>Create 3rd OU named <strong>_CLIENTS</strong> for client.</li>
-  <li>Create a new user named “Jane Doe” with the username <code>jane_admin</code> and add her to the <strong>Domain Admins</strong> security group.</li>
-  <li>Log out and back in to DC-1 as <code>mydomain.com\jane_admin</code> to use this admin account moving forward.</li>
+  <li>On DC-1, open Active Directory Users and Computers. Click mydomain.com on the left.</li>
+   <li>Right click mydomain.com>New>Organizational Unit. name is “_EMPLOYEES”</li>
+   <li>Make two more OUs named “_ADMINS” and “_CLIENTS”</li>
+   <li>Under _ADMINS folder right click>New>User. We will use Jack Smith for this example. Give her a username and password. Ex. jack_admin</li>
+  <li>Right click user Jack Smith. hit ‘Member of’ and type in “domain admin” and hit check names.</li>
+  <li>Log out of DC-1 and relog in using mydomain.com\jack_admin. Use this username when logging into DC-1 from now on.</li>
 </ul>
 
-<h2>Step 5: Join Client-1 to the Domain</h2>
+<h2>Step 5: Joining Client-1 to the Domain</h2>
 <ul>
-  <li>In the Azure Portal, set Client-1’s DNS settings to DC-1's Private IP address.</li>
-  <li>Restart Client-1 from the Azure Portal.</li>
-  <li>Login to Client-1 using the local admin account <code>labuser</code>, and join it to the domain <code>mydomain.com</code>.</li>
-  <li>Once joined, restart Client-1 and verify that it appears in ADUC under the <strong>Computers</strong> container.</li>
-  <li>(Optional) Create an OU called <strong>_CLIENTS</strong> and move Client-1 into this OU for organizational purposes.</li>
+  <li>On Client- 1, right click start menu> System> rename this PC(advanced)>Change, select domain and enter mydomain.com.</li>
+  <li>On DC-1, open Active Directory Users and Computers, select mydomain.com>Computers, drag Client-1 into _CLIENTS folder.</li>
 </ul>
 
-<h2>Step 6: Configure Remote Desktop via Group Policy for Non-Administrative Users</h2>
+<h2>Step 6: Allowing Non-Administrative Users remote access to Client-1</h2>
 <ul>
-  <li>Apply a new Group Policy to both <strong>_CLIENTS</strong> and <strong>_EMPLOYEES</strong> Organizational Units to allow <strong>domain users</strong> to access Remote Desktop.</li>
-  <li>This centralizes management of Remote Desktop settings across all machines in these OUs, avoiding the need to configure individual clients manually.</li>
-  <li>Ensure the policy is applied by running <code>gpupdate /force</code> on the client machines or wait for the next policy refresh cycle.</li>
+  <li>Log onto Client-1 using the admin account, mydomain.com\jack_admin.</li>
+  <li>Right click start>System>Remote Desktop>’Select users that can remotely access this
+PC’> Add> type in domain users>Check names.</li>
 </ul>
-
-<h2>Step 7: Create additional user accounts using a Powershell ISE script and verify access.</h2>
-<ul>
-  <li>Log into DC-1 as <code>jane_admin</code> and open PowerShell ISE as an administrator.</li>
-  <li>Use PowerShell to create multiple user accounts in AD, following a scripted process.</li>
-  <li>Once the script completes, check ADUC to ensure the new users are created in the appropriate OU.</li>
-  <li>Attempt to log into Client-1 with one of the newly created users to verify the account works correctly.</li>
-</ul>
-
-<h2>Conclusion</h2>
-<p>In this lab, we deployed and configured a working Active Directory environment. We set up a Domain Controller and a client machine in Azure, ensured they could communicate, and installed Active Directory Domain Services. After creating a new domain, we added organizational units and user accounts, including an admin account, and joined the client to the domain.</p>
-
-<p>We also configured Remote Desktop access for domain users and used a PowerShell script to generate additional users. Finally, we tested logging into the client with one of the new accounts. This lab gave us hands-on experience with essential Active Directory tasks and configurations.</p>
